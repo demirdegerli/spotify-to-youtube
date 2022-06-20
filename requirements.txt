@@ -1,0 +1,6 @@
+spotipy
+google_auth_oauthlib
+googleapiclient
+pytube
+validators
+python-dotenv
