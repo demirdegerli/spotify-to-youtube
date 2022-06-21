@@ -1,4 +1,3 @@
-from http import client
 from spotipy import SpotifyClientCredentials, Spotify
 from google_auth_oauthlib.flow import Flow
 import googleapiclient.discovery
@@ -60,11 +59,12 @@ def getFullName(item):
 url = input("Spotify playlist URL: ")
 while not validators.url(url):
     url = input("Spotify playlist URL: ")
-
-playlist = sp.playlist(url)
+playlist = False
 while not playlist:
-    url = input("Spotify playlist URL: ")
-    playlist = sp.playlist(url)
+    try:
+        playlist = sp.playlist(url)
+    except:
+        url = input("Spotify playlist URL: ")
 
 playlist_name = playlist['name']
 playlist_description = playlist['description']
