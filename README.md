@@ -17,6 +17,8 @@ pip3 install -r requirements.txt
     - Go to the [Google Cloud Platform Console](https://console.cloud.google.com/apis/credentials).
     - Create an `OAuth client ID` by clicking the `CREATE CREDENTIALS +` button.
     - Select the `Application type` to `Web application`.
+    - Click `+ ADD URI` under the `Authorized redirect URIs` menu.
+    - Type `http://localhost:8080/` to the opened textbox.
     - Fill the other form sections and click `CREATE`.
     - Download credentials by clicking `DOWNLOAD JSON`.
     - Rename the downloaded file to `client_secret.json` and move to the project directory.
