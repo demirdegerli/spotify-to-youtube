@@ -75,7 +75,7 @@ youtube_equalities = []
 for track in playlistTracks:
     search = pytube.Search(track)
     results = search.results
-    if results[0]:
+    if len(results) > 0:
         video_id = results[0].vid_info['videoDetails']['videoId']
         if video_id:
             youtube_equalities.append(video_id)
