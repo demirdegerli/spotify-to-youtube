@@ -79,6 +79,8 @@ for track in playlistTracks:
         video_id = results[0].vid_info['videoDetails']['videoId']
         if video_id:
             youtube_equalities.append(video_id)
+    else:
+        print("No YouTube equality found for {}, skipping...".format(track))
 print("{} YouTube equalities found. Authorizing...".format(len(youtube_equalities)))
 
 
