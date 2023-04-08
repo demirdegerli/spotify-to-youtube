@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 if not os.path.exists("client_secret.json"):
-    print("client_secret.json file not found. Quiting...")
+    print("client_secret.json file not found. Quitting...")
     quit()
 if not os.getenv("SPOTIFY_CLIENT_ID") or not os.getenv("SPOTIFY_CLIENT_SECRET"):
     spotify_credentials_p = input("Spotify client id and Spotify client secret not found. Do you want to set them now? (yes/no) > ")
@@ -33,10 +33,10 @@ SPOTIFY_CLIENT_SECRET="{}"
         if continue_prompt == "yes":
             pass
         else:
-            print("Quiting...")
+            print("Quitting...")
             quit()
     else:
-        print("Quiting...")
+        print("Quitting...")
         quit()
 
 load_dotenv()
