@@ -22,3 +22,8 @@ pip3 install -r requirements.txt
     - Fill the other form sections and click `CREATE`.
     - Download credentials by clicking `DOWNLOAD JSON`.
     - Rename the downloaded file to `client_secret.json` and move to the project directory.
+
+## Run
+```
+python3 main.py
+```
