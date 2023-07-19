@@ -76,7 +76,7 @@ youtube_equalities = []
 for track in playlistTracks:
     results = yt.search(track)
     if len(results) > 0:
-        videoId = None
+        video_id = None
         if 'videoId' in results[0]:
             video_id = results[0]['videoId']
         if video_id:
