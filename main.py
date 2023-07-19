@@ -1,7 +1,7 @@
 from spotipy import SpotifyClientCredentials, Spotify
 from google_auth_oauthlib.flow import Flow
 import googleapiclient.discovery
-import pytube
+from ytmusicapi import YTMusic
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
 import webbrowser
@@ -71,12 +71,14 @@ playlist_description = playlist['description']
 print("Playlist has {} tracks, finding YouTube equalities of tracks...".format(len(playlist['tracks']['items'])))
 playlistTracks = list(map(getFullName, playlist['tracks']['items']))
 
+yt = YTMusic()
 youtube_equalities = []
 for track in playlistTracks:
-    search = pytube.Search(track)
-    results = search.results
+    results = yt.search(track)
     if len(results) > 0:
-        video_id = results[0].video_id
+        videoId = None
+        if 'videoId' in results[0]:
+            video_id = results[0]['videoId']
         if video_id:
             youtube_equalities.append(video_id)
     else:
