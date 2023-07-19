@@ -74,13 +74,9 @@ playlistTracks = list(map(getFullName, playlist['tracks']['items']))
 yt = YTMusic()
 youtube_equalities = []
 for track in playlistTracks:
-    results = yt.search(track)
+    results = yt.search(track, filter='songs')
     if len(results) > 0:
-        video_id = None
-        if 'videoId' in results[0]:
-            video_id = results[0]['videoId']
-        if video_id:
-            youtube_equalities.append(video_id)
+        youtube_equalities.append(results[0]['videoId'])
     else:
         print("No YouTube equality found for {}, skipping...".format(track))
 print("{} YouTube equalities found. Authorizing...".format(len(youtube_equalities)))
