@@ -1,5 +1,6 @@
 .cache
 .env
-client_secret.json
 notes.md
 test.py
+oauth.json
+oauth.txt
