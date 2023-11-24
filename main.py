@@ -1,25 +1,27 @@
 from spotipy import SpotifyClientCredentials, Spotify
-from google_auth_oauthlib.flow import Flow
-import googleapiclient.discovery
-from ytmusicapi import YTMusic
+import ytmusicapi
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import urllib.parse as urlparse
-import webbrowser
 import validators
-import json
 import os
 from dotenv import load_dotenv
+from time import sleep
 
-load_dotenv()
-if not os.path.exists("client_secret.json"):
-    print("client_secret.json file not found. Quitting...")
+if not os.path.exists("oauth.txt"):
+    print("oauth.txt file is not found. Quitting...")
     quit()
+with open("oauth.txt") as file:
+    try:
+        ytmusicapi.setup(filepath="oauth.json", headers_raw=file.read())
+    except:
+        print("The credentials in the oauth.txt file are missing or wrong. Please paste the YouTube credentials into the oauth.txt file correctly. Quitting...")
+        quit()
+load_dotenv()
 if not os.getenv("SPOTIFY_CLIENT_ID") or not os.getenv("SPOTIFY_CLIENT_SECRET"):
-    spotify_credentials_p = input("Spotify client id and Spotify client secret not found. Do you want to set them now? (yes/no) > ")
-    if spotify_credentials_p == "yes":
-        spotify_client_id = input("Spotify client id: ")
+    credentials_p = input("Spotify client ID or Spotify client secret are not found. Do you want to set them now? (yes/no) > ")
+    if credentials_p == "yes":
+        spotify_client_id = input("Spotify client ID: ")
         while not spotify_client_id:
-            spotify_client_id = input("Spotify client id: ")
+            spotify_client_id = input("Spotify client ID: ")
         spotify_client_secret = input("Spotify client secret: ")
         while not spotify_client_secret:
             spotify_client_secret = input("Spotify client secret: ")
@@ -29,6 +31,7 @@ SPOTIFY_CLIENT_ID="{}"
 SPOTIFY_CLIENT_SECRET="{}"
 """.format(spotify_client_id, spotify_client_secret))
         env.close()
+
         continue_prompt = input("Credentials are succesfully configured. Continue? (yes/no) > ")
         if continue_prompt == "yes":
             pass
@@ -62,105 +65,72 @@ while not validators.url(url):
 playlist = False
 while not playlist:
     try:
-        playlist = sp.playlist(url)
+        playlist = sp.playlist(url, fields='name, description, tracks.total')
     except:
         url = input("Spotify playlist URL: ")
 
+total = playlist['tracks']['total']
+print("Playlist has {} tracks, fetching playlist items...".format(total))
+items = []
+offset = 0
+while True:
+    response = sp.playlist_items(url,
+                                 offset=offset,
+                                 fields='items(track.artists(name),track.name)',
+                                 additional_types=['track'])
+
+    if len(response['items']) == 0:
+        break
+
+    items += response['items']
+    offset = offset + len(response['items'])
+    print(offset, "/", total)
+
 playlist_name = playlist['name']
 playlist_description = playlist['description']
-print("Playlist has {} tracks, finding YouTube equalities of tracks...".format(len(playlist['tracks']['items'])))
-playlistTracks = list(map(getFullName, playlist['tracks']['items']))
+print("Finding YouTube equalities of tracks...")
+playlistTracks = list(map(getFullName, items))
 
-yt = YTMusic()
+yt = ytmusicapi.YTMusic("oauth.json")
 youtube_equalities = []
+index = 1
+not_found = []
 for track in playlistTracks:
     results = yt.search(track, filter='songs')
     if len(results) > 0:
         youtube_equalities.append(results[0]['videoId'])
+        print("{}/{} Found: {}".format(index, total, track))
     else:
-        print("No YouTube equality found for {}, skipping...".format(track))
-print("{} YouTube equalities found. Authorizing...".format(len(youtube_equalities)))
+        not_found.append(track)
+        print("{}/{} Not found: {}, skipping...".format(index, total, track))
+    index += 1
 
+print("\n{} YouTube equalities found. {} of them are not found. Creating YouTube playlist...".format(len(youtube_equalities), total-len(youtube_equalities)))
+playlist_id = False
+try:
+    playlist_id = yt.create_playlist(playlist_name + " - Spotify", playlist_description)
+except:
+    print("Your YouTube credentials are expired or incorrect. Please replace the credentials in the oauth.txt. Quitting...")
+    quit()
 
-scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
-
-client_secrets_file = "client_secret.json"
-client_secrets_data = json.load(open(client_secrets_file))
-
-# Get credentials and create an API client
-flow = Flow.from_client_secrets_file(
-    client_secrets_file,
-    scopes,
-    redirect_uri=client_secrets_data['web']['redirect_uris'][0]
-)
-
-# Automatically go to the authorization URL.
-auth_url = flow.authorization_url(prompt='consent')
-auth_url = auth_url[0]
-webbrowser.open_new_tab(auth_url)
-
-code = False
-class MyServer(BaseHTTPRequestHandler):
-    def do_GET(self):
-        global code
-        query = urlparse.urlparse(self.path).query
-        code = urlparse.parse_qs(query).get('code', None)
-        if code:
-            code = code[0]
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        self.wfile.write(bytes("You can close the tab.", "utf-8"))
-
-webServer = HTTPServer(("localhost", 8080), MyServer)
-
-while not code:
-    webServer.handle_request()
-
-# login with the code
-flow.fetch_token(code=code)
-
-print("Authorization successful. Creating YouTube playlist...")
-# create youtube playlist
-youtube = googleapiclient.discovery.build(
-    "youtube",
-    "v3",
-    credentials=flow.credentials
-)
-
-request = youtube.playlists().insert(
-    part="snippet,status",
-    body={
-      "snippet": {
-        "title": playlist_name + " - Spotify",
-        "description": playlist_description,
-      },
-      "status": {
-        "privacyStatus": "private"
-      }
-    }
-)
-
-response = request.execute()
-print("YouTube playlist created. Adding YouTube videos...")
-
-playlist_id = response['id']
-
-# add tracks to playlist
+print("YouTube playlist created. Adding YouTube equalities...")
+index = 1
+not_added = []
 for video_id in youtube_equalities:
-    request = youtube.playlistItems().insert(
-        part="snippet",
-        body={
-            "snippet": {
-              "playlistId": playlist_id,
-              "position": 0,
-              "resourceId": {
-                "kind": "youtube#video",
-                "videoId": video_id
-                }
-              }
-        }
-    )
+    try:
+        yt.add_playlist_items(playlist_id, [video_id], duplicates=True)
+        print("{}/{} Added song with the video ID: {}".format(index, len(youtube_equalities), video_id))
+    except:
+        print("{}/{} Can't add the song with the video ID: {}".format(index, len(youtube_equalities), video_id))
+        not_added.append(video_id)
+    index += 1
+if len(not_added) > 0:
+    names_and_ids = []
+    for item in not_added:
+        video_details = yt.get_song(item)['videoDetails']
+        names_and_ids.append("{} - {} | {}".format(video_details['author'], video_details['name'], item))
+    print("Names and video IDs of the songs that can't be added:\n- {}".format("\n- ".join(names_and_ids)))
 
-    request.execute()
-print("YouTube playlist is ready. Playlist URL: https://www.youtube.com/playlist?list={}".format(playlist_id))
+print("\nYouTube playlist is ready. Playlist URL: https://music.youtube.com/playlist?list={}".format(playlist_id))
+if len(not_found) > 0:
+    print("\nNot found on YouTube:\n- {}".format(playlist_id, "\n- ".join(not_found)))
