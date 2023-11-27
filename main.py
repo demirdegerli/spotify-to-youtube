@@ -42,10 +42,6 @@ SPOTIFY_CLIENT_SECRET="{}"
         print("Quitting...")
         quit()
 
-specific_playlist = False
-if input("If you want to add the songs to a specific YouTube playlist instead of creating a new one, enter the playlist ID. Only paste the PLAYLIST_ID in https://music.youtube.com/playlist?list=PLAYLIST_ID. If not, press enter without typing anything. > "):
-    specific_playlist = True
-
 load_dotenv()
 auth_manager = SpotifyClientCredentials(
     client_id=os.getenv("SPOTIFY_CLIENT_ID"),
@@ -112,9 +108,12 @@ for track in playlistTracks:
 print("\n{} YouTube equalities found. {} of them are not found. Creating YouTube playlist...".format(len(youtube_equalities), total-len(youtube_equalities)))
 playlist_id = False
 try:
-    if specific_playlist:
-        playlist_id = specific_playlist
-    else:
+    user_playlists = yt.get_library_playlists(10000)
+    for playlist in user_playlist:
+        if playlist['title'] == playlist_name + " - Spotify":
+            playlist_id = playlist['playlistId']
+            break
+    if not playlist_id:
         playlist_id = yt.create_playlist(playlist_name + " - Spotify", playlist_description)
 except:
     print("Your YouTube credentials are expired or incorrect. Please replace the credentials in the oauth.txt. Quitting...")
@@ -141,6 +140,6 @@ if len(not_added) > 0:
             names_and_ids.append("[Can't get video info, YouTube has blocked this request] | {}".format(item))
     print("Names and video IDs of the songs that couldn't be added: (please keep in mind that duplicate songs are not added)\n- {}\n\nYou can try running this script after a while. Songs that are added before won't be added on the future runs.".format("\n- ".join(names_and_ids)))
 
-print("\nYouTube playlist is ready. Playlist URL: https://music.youtube.com/playlist?list={}\nIf this link doesn't work please check your library and the playlist ID you entered if you entered the playlist ID manually.".format(playlist_id))
+print("\nYouTube playlist is ready. Playlist URL: https://music.youtube.com/playlist?list={}".format(playlist_id))
 if len(not_found) > 0:
     print("\nNot found on YouTube:\n- {}".format(playlist_id, "\n- ".join(not_found)))
