@@ -142,4 +142,4 @@ if len(not_added) > 0:
 
 print("\nYouTube playlist is ready. Playlist URL: https://music.youtube.com/playlist?list={}".format(playlist_id))
 if len(not_found) > 0:
-    print("\nNot found on YouTube:\n- {}".format(playlist_id, "\n- ".join(not_found)))
+    print("\nNot found on YouTube:\n- {}".format("\n- ".join(not_found)))
