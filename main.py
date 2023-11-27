@@ -120,26 +120,10 @@ except:
     quit()
 
 print("YouTube playlist created. Adding YouTube equalities...")
-index = 1
-not_added = []
-for video_id in youtube_equalities:
-    try:
-        yt.add_playlist_items(playlist_id, [video_id], duplicates=False)
-        print("{}/{} Added song with the video ID: {}".format(index, len(youtube_equalities), video_id))
-    except:
-        print("{}/{} Can't add the song with the video ID: {}".format(index, len(youtube_equalities), video_id))
-        not_added.append(video_id)
-    index += 1
-if len(not_added) > 0:
-    names_and_ids = []
-    for item in not_added:
-        try:
-            video_details = yt.get_song(item)['videoDetails']
-            names_and_ids.append("{} - {} | {}".format(video_details['author'], video_details['name'], item))
-        except:
-            names_and_ids.append("[Can't get video info, YouTube has blocked this request] | {}".format(item))
-    print("Names and video IDs of the songs that couldn't be added: (please keep in mind that duplicate songs are not added)\n- {}\n\nYou can try running this script after a while. Songs that are added before won't be added on the future runs.".format("\n- ".join(names_and_ids)))
 
-print("\nYouTube playlist is ready. Playlist URL: https://music.youtube.com/playlist?list={}".format(playlist_id))
+yt.add_playlist_items(playlist_id, youtube_equalities, duplicates=True)
+
 if len(not_found) > 0:
     print("\nNot found on YouTube:\n- {}".format("\n- ".join(not_found)))
+
+print("\nYouTube playlist is ready. Playlist URL: https://music.youtube.com/playlist?list={}".format(playlist_id))
