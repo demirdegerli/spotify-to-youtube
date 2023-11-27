@@ -109,7 +109,7 @@ print("\n{} YouTube equalities found. {} of them are not found. Creating YouTube
 playlist_id = False
 try:
     user_playlists = yt.get_library_playlists(10000)
-    for playlist in user_playlist:
+    for playlist in user_playlists:
         if playlist['title'] == playlist_name + " - Spotify":
             playlist_id = playlist['playlistId']
             break
