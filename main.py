@@ -70,7 +70,7 @@ while not playlist:
         url = input("Spotify playlist URL: ")
 
 total = playlist['tracks']['total']
-print("Playlist has {} tracks, fetching playlist items...".format(total))
+print("Playlist has {} items, fetching playlist items...".format(total))
 items = []
 offset = 0
 while True:
@@ -88,14 +88,17 @@ while True:
 
 playlist_name = playlist['name']
 playlist_description = playlist['description']
+
+playlist_tracks = [name for name in list(map(getFullName, items)) if name]
+print("{} items on your playlist are not songs, they will be excluded.".format(total-len(playlist_tracks)))
+total = len(playlist_tracks)
 print("Finding YouTube equalities of tracks...")
-playlistTracks = list(map(getFullName, items))
 
 yt = ytmusicapi.YTMusic("oauth.json")
 youtube_equalities = []
 index = 1
 not_found = []
-for track in playlistTracks:
+for track in playlist_tracks:
     results = yt.search(track, filter='songs')
     if len(results) > 0:
         youtube_equalities.append(results[0]['videoId'])
@@ -108,7 +111,7 @@ for track in playlistTracks:
 print("\n{} YouTube equalities found. {} of them are not found. Creating YouTube playlist...".format(len(youtube_equalities), total-len(youtube_equalities)))
 playlist_id = False
 try:
-    user_playlists = yt.get_library_playlists(10000)
+    user_playlists = yt.get_library_playlists(None)
     for playlist in user_playlists:
         if playlist['title'] == playlist_name + " - Spotify":
             playlist_id = playlist['playlistId']
@@ -120,6 +123,10 @@ except:
     quit()
 
 print("YouTube playlist created. Adding YouTube equalities...")
+
+for track in yt.get_playlist(playlist_id, None)["tracks"]:
+    if track["videoId"] in youtube_equalities:
+        youtube_equalities.remove(track["videoId"])
 
 yt.add_playlist_items(playlist_id, youtube_equalities, duplicates=True)
 
