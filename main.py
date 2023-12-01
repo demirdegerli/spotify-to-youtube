@@ -90,7 +90,8 @@ playlist_name = playlist['name']
 playlist_description = playlist['description']
 
 playlist_tracks = [name for name in list(map(getFullName, items)) if name]
-print("{} items on your playlist are not songs, they will be excluded.".format(total-len(playlist_tracks)))
+if total-len(playlist_tracks) > 0:
+    print("{} items on your playlist are not songs, they will be excluded.".format(total-len(playlist_tracks)))
 total = len(playlist_tracks)
 print("Finding YouTube equalities of tracks...")
 
