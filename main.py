@@ -129,7 +129,8 @@ for track in yt.get_playlist(playlist_id, None)["tracks"]:
     if track["videoId"] in youtube_equalities:
         youtube_equalities.remove(track["videoId"])
 
-yt.add_playlist_items(playlist_id, youtube_equalities, duplicates=True)
+if len(youtube_equalities) > 0:
+    yt.add_playlist_items(playlist_id, youtube_equalities, duplicates=True)
 
 if len(not_found) > 0:
     print("\nNot found on YouTube:\n- {}".format("\n- ".join(not_found)))
